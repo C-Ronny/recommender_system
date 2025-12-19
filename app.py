@@ -6,7 +6,6 @@ from utils import get_movie_poster, format_movie_card, load_data_cached
 import warnings
 warnings.filterwarnings('ignore')
 
-# Page config
 st.set_page_config(
     page_title="MovieLens Recommender",
     page_icon="🎬",
@@ -14,7 +13,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS - Netflix style
 st.markdown("""
 <style>
     .stApp {
@@ -77,7 +75,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
 if 'initialized' not in st.session_state:
     st.session_state.initialized = False
     st.session_state.movies_df = None
@@ -90,10 +87,8 @@ if 'initialized' not in st.session_state:
 def initialize_app():
     """Load all data and initialize recommenders"""
     try:
-        # Load data
         movies_df, movie_features, links_df = load_data_cached()
         
-        # Initialize recommenders
         baseline_rec = BaselineRecommender(movies_df)
         content_rec = ContentBasedRecommender(movies_df, movie_features, links_df)
         
@@ -102,7 +97,6 @@ def initialize_app():
         st.error(f"Error loading data: {e}")
         return None, None, None, None, None
 
-# Load data on first run
 if not st.session_state.initialized:
     with st.spinner("🎬 Loading MovieLens data..."):
         (st.session_state.movies_df, 
@@ -114,19 +108,16 @@ if not st.session_state.initialized:
         if st.session_state.movies_df is not None:
             st.session_state.initialized = True
 
-# Main app
 if st.session_state.initialized:
     movies_df = st.session_state.movies_df
     baseline_rec = st.session_state.baseline_rec
     content_rec = st.session_state.content_rec
     
-    # Header
     st.markdown('<h1 style="color: #e50914; text-align: center; margin-bottom: 10px;">🎬 MovieLens Recommender</h1>', 
                 unsafe_allow_html=True)
     st.markdown('<p style="text-align: center; color: #999; margin-bottom: 40px;">Powered by Machine Learning</p>', 
                 unsafe_allow_html=True)
     
-    # Sidebar
     with st.sidebar:
         st.markdown('<div class="section-header">⚙️ Settings</div>', unsafe_allow_html=True)
         
@@ -160,14 +151,12 @@ if st.session_state.initialized:
         st.metric("Total Ratings", "33.8M")
         st.metric("Users", "331K")
     
-    # Main content
     if "🔥 Discover" in recommendation_mode:
         st.markdown('<div class="section-header">🔥 Discover New Movies</div>', unsafe_allow_html=True)
         
         col1, col2 = st.columns([2, 1])
         
         with col1:
-            # Genre selection
             all_genres = sorted(set([g for genres in movies_df['genres'].str.split('|') 
                                      for g in genres if g != '(no genres listed)']))
             
@@ -179,7 +168,6 @@ if st.session_state.initialized:
             )
         
         with col2:
-            # Year range
             min_year = int(movies_df['release_year'].min())
             max_year = int(movies_df['release_year'].max())
             
@@ -210,7 +198,6 @@ if st.session_state.initialized:
                     st.markdown(f'<div class="section-header">✨ Top {len(recommendations)} Recommendations</div>', 
                               unsafe_allow_html=True)
                     
-                    # Display in grid
                     cols = st.columns(5)
                     for idx, (_, movie) in enumerate(recommendations.iterrows()):
                         with cols[idx % 5]:
@@ -220,10 +207,9 @@ if st.session_state.initialized:
                 else:
                     st.warning("No movies found matching your criteria. Try different filters.")
     
-    else:  # Similar Movies mode
+    else:
         st.markdown('<div class="section-header">🎯 Find Similar Movies</div>', unsafe_allow_html=True)
         
-        # Movie search
         movie_titles = movies_df['title'].tolist()
         
         selected_movie = st.selectbox(
@@ -235,7 +221,6 @@ if st.session_state.initialized:
         )
         
         if selected_movie:
-            # Show selected movie
             selected_movie_data = movies_df[movies_df['title'] == selected_movie].iloc[0]
             
             col1, col2, col3 = st.columns([1, 2, 2])
@@ -275,7 +260,6 @@ if st.session_state.initialized:
                             st.markdown(f'<div class="section-header">🎬 Movies Similar to "{selected_movie}"</div>', 
                                       unsafe_allow_html=True)
                             
-                            # Display in grid
                             cols = st.columns(5)
                             for idx, (_, movie) in enumerate(similar_movies.iterrows()):
                                 with cols[idx % 5]:
@@ -285,7 +269,6 @@ if st.session_state.initialized:
                         else:
                             st.warning("Could not find similar movies. Try a different movie.")
 
-    # Footer
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #666; padding: 20px;">
