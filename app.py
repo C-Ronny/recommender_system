@@ -53,6 +53,10 @@ st.markdown("""
         border-left: 4px solid #e50914;
         padding-left: 12px;
     }
+    .similar-movies-section {
+        margin-top: 40px;
+        padding-top: 20px;
+    }
     .stSelectbox label, .stMultiSelect label, .stSlider label {
         color: #ffffff !important;
         font-weight: 600;
@@ -82,6 +86,8 @@ if 'initialized' not in st.session_state:
     st.session_state.links_df = None
     st.session_state.baseline_rec = None
     st.session_state.content_rec = None
+    st.session_state.selected_movie_id = None
+    st.session_state.similar_movies = None
 
 @st.cache_data(show_spinner=False)
 def initialize_app():
@@ -302,7 +308,12 @@ if st.session_state.initialized:
         if selected_movie and selected_movie_data is not None:
             selected_movie_data = movies_df[movies_df['title'] == selected_movie].iloc[0]
             
-            col1, col2, col3 = st.columns([1, 2, 2])
+            # Store selected movie in session state
+            if 'selected_movie_id' not in st.session_state or st.session_state.selected_movie_id != selected_movie_data['movieId']:
+                st.session_state.selected_movie_id = selected_movie_data['movieId']
+                st.session_state.similar_movies = None  # Clear previous similar movies
+            
+            col1, col2 = st.columns([1, 2])
             
             with col1:
                 poster_url = get_movie_poster(selected_movie_data['movieId'], st.session_state.links_df)
@@ -316,13 +327,15 @@ if st.session_state.initialized:
                 st.markdown(f"**Genres:** {selected_movie_data['genres'].replace('|', ', ')}")
                 st.markdown(f"**Year:** {int(selected_movie_data['release_year']) if pd.notna(selected_movie_data['release_year']) else 'Unknown'}")
                 
-                if 'avg_rating' in selected_movie_data:
-                    st.metric("Average Rating", f"{selected_movie_data['avg_rating']:.2f} ⭐")
-                if 'num_ratings' in selected_movie_data:
-                    st.metric("Total Ratings", f"{int(selected_movie_data['num_ratings']):,}")
-            
-            with col3:
-                if st.button("🔍 Find Similar Movies", key="similar_btn"):
+                col_rating, col_count = st.columns(2)
+                with col_rating:
+                    if 'avg_rating' in selected_movie_data:
+                        st.metric("Average Rating", f"{selected_movie_data['avg_rating']:.2f} ⭐")
+                with col_count:
+                    if 'num_ratings' in selected_movie_data:
+                        st.metric("Total Ratings", f"{int(selected_movie_data['num_ratings']):,}")
+                
+                if st.button("🔍 Find Similar Movies", key="similar_btn", use_container_width=True):
                     with st.spinner("Analyzing movie features..."):
                         if "Baseline" in recommender_type:
                             similar_movies = baseline_rec.find_similar(
@@ -336,17 +349,30 @@ if st.session_state.initialized:
                             )
                         
                         if similar_movies is not None and len(similar_movies) > 0:
-                            st.markdown(f'<div class="section-header">🎬 Movies Similar to "{selected_movie}"</div>', 
-                                      unsafe_allow_html=True)
-                            
-                            cols = st.columns(5)
-                            for idx, (_, movie) in enumerate(similar_movies.iterrows()):
-                                with cols[idx % 5]:
-                                    poster_url = get_movie_poster(movie['movieId'], st.session_state.links_df)
-                                    card_html = format_movie_card(movie, poster_url)
-                                    st.markdown(card_html, unsafe_allow_html=True)
+                            st.session_state.similar_movies = similar_movies
+                            st.rerun()
                         else:
                             st.warning("Could not find similar movies. Try a different movie.")
+                            st.session_state.similar_movies = None
+            
+            # Display similar movies in a full-width section below
+            if st.session_state.similar_movies is not None and len(st.session_state.similar_movies) > 0:
+                st.markdown("---")
+                st.markdown(f'<div class="section-header similar-movies-section">🎬 Movies Similar to "{selected_movie}"</div>', 
+                          unsafe_allow_html=True)
+                
+                # Display movies in a responsive grid (5 columns on large screens)
+                num_movies = len(st.session_state.similar_movies)
+                cols = st.columns(5)
+                
+                for idx, (_, movie) in enumerate(st.session_state.similar_movies.iterrows()):
+                    with cols[idx % 5]:
+                        poster_url = get_movie_poster(movie['movieId'], st.session_state.links_df)
+                        card_html = format_movie_card(movie, poster_url)
+                        st.markdown(card_html, unsafe_allow_html=True)
+                
+                # Add some spacing at the bottom
+                st.markdown("<br>", unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("""
