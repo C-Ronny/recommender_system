@@ -2,9 +2,14 @@ import pandas as pd
 import streamlit as st
 import requests
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 # TMDB API Configuration
-TMDB_API_KEY = "8265bd1679663a7ea12ac168da84d2e8"  # Free public key (replace with yours)
+TMDB_API_KEY = os.getenv("TMDB_API_KEY", "8265bd1679663a7ea12ac168da84d2e8")  # Fallback to public key if not set
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_IMAGE_BASE = "https://image.tmdb.org/t/p/w500"
 

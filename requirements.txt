@@ -7,3 +7,4 @@ pyarrow
 Pillow
 matplotlib
 plotly
+python-dotenv
