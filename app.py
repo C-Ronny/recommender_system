@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from recommender import BaselineRecommender, ContentBasedRecommender
-from utils import get_movie_poster, format_movie_card, load_data_cached
+from utils import get_movie_poster, format_movie_card, load_data_cached, search_movies_by_name
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -154,6 +154,14 @@ if st.session_state.initialized:
     if "🔥 Discover" in recommendation_mode:
         st.markdown('<div class="section-header">🔥 Discover New Movies</div>', unsafe_allow_html=True)
         
+        # Optional movie name search filter
+        movie_search_filter = st.text_input(
+            "🔍 Filter by movie name (optional)",
+            placeholder="Type to filter movies by name...",
+            help="Optionally filter recommendations by movie name",
+            key="discover_movie_search"
+        )
+        
         col1, col2 = st.columns([2, 1])
         
         with col1:
@@ -181,17 +189,22 @@ if st.session_state.initialized:
         
         if st.button("🎬 Get Recommendations", key="discover_btn"):
             with st.spinner("Finding perfect movies for you..."):
+                # Apply movie name filter if provided (pass to recommender)
+                movie_name_filter = movie_search_filter.strip() if movie_search_filter and len(movie_search_filter.strip()) > 0 else None
+                
                 if "Baseline" in recommender_type:
                     recommendations = baseline_rec.recommend(
                         n=num_recommendations,
                         genres=selected_genres if selected_genres else None,
-                        year_range=year_range
+                        year_range=year_range,
+                        movie_name=movie_name_filter
                     )
                 else:
                     recommendations = content_rec.recommend_popular(
                         n=num_recommendations,
                         genres=selected_genres if selected_genres else None,
-                        year_range=year_range
+                        year_range=year_range,
+                        movie_name=movie_name_filter
                     )
                 
                 if recommendations is not None and len(recommendations) > 0:
@@ -205,22 +218,88 @@ if st.session_state.initialized:
                             card_html = format_movie_card(movie, poster_url)
                             st.markdown(card_html, unsafe_allow_html=True)
                 else:
-                    st.warning("No movies found matching your criteria. Try different filters.")
+                    error_msg = "No movies found matching your criteria."
+                    if movie_name_filter:
+                        error_msg += f" No movies found with '{movie_name_filter}' in the title"
+                        if selected_genres:
+                            error_msg += f" in the selected genres"
+                        if year_range:
+                            error_msg += f" in the year range {year_range[0]}-{year_range[1]}"
+                        error_msg += ". Try:"
+                        error_msg += "\n- Using a different movie name or partial name"
+                        error_msg += "\n- Removing genre filters"
+                        error_msg += "\n- Expanding the year range"
+                    else:
+                        error_msg += " Try adjusting your filters."
+                    st.warning(error_msg)
     
     else:
         st.markdown('<div class="section-header">🎯 Find Similar Movies</div>', unsafe_allow_html=True)
         
-        movie_titles = movies_df['title'].tolist()
-        
-        selected_movie = st.selectbox(
-            "Search for a movie",
-            options=movie_titles,
-            index=None,
-            placeholder="Type to search...",
-            help="Search by movie title"
+        # Movie search input
+        search_query = st.text_input(
+            "🔍 Search for a movie",
+            placeholder="Type movie name to search (e.g., 'batman', 'matrix', 'titanic')...",
+            help="Start typing to search for movies by name",
+            key="movie_search_input"
         )
         
-        if selected_movie:
+        selected_movie = None
+        selected_movie_data = None
+        
+        if search_query and len(search_query.strip()) > 0:
+            # Search for movies matching the query
+            with st.spinner(f"Searching for movies matching '{search_query}'..."):
+                search_results = search_movies_by_name(movies_df, search_query, max_results=100)
+            
+            if len(search_results) > 0:
+                st.success(f"✅ Found {len(search_results)} movie(s) matching '{search_query}'")
+                
+                # Show a preview of search results
+                preview_limit = min(10, len(search_results))
+                st.markdown(f"**Preview of top {preview_limit} results:**")
+                
+                # Display results in a compact list format
+                preview_results = search_results.head(preview_limit)
+                result_list_html = "<div style='max-height: 200px; overflow-y: auto; background: #1a1a1a; padding: 10px; border-radius: 5px; margin: 10px 0;'>"
+                for idx, (_, movie) in enumerate(preview_results.iterrows()):
+                    year = f" ({int(movie['release_year'])})" if pd.notna(movie.get('release_year')) else ""
+                    rating = f" ⭐ {movie['avg_rating']:.1f}" if pd.notna(movie.get('avg_rating')) else ""
+                    result_list_html += f"<div style='padding: 5px; border-bottom: 1px solid #333;'>{idx+1}. <strong>{movie['title']}</strong>{year}{rating}</div>"
+                result_list_html += "</div>"
+                st.markdown(result_list_html, unsafe_allow_html=True)
+                
+                # Display search results in a more visible way
+                st.markdown("**Select a movie from the results below:**")
+                
+                # Create a more user-friendly selection interface
+                result_titles = search_results['title'].tolist()
+                
+                # Show first 30 results in a selectbox, with option to see more
+                display_limit = min(30, len(result_titles))
+                display_titles = result_titles[:display_limit]
+                
+                if len(result_titles) > display_limit:
+                    st.info(f"Showing top {display_limit} of {len(result_titles)} results. Refine your search to see more specific matches.")
+                
+                selected_title = st.selectbox(
+                    f"Choose a movie ({len(search_results)} found)",
+                    options=display_titles,
+                    index=None,
+                    help="Select a movie from the search results",
+                    key="movie_select_from_search"
+                )
+                
+                if selected_title:
+                    selected_movie = selected_title
+                    selected_movie_data = movies_df[movies_df['title'] == selected_title].iloc[0]
+            else:
+                st.warning(f"❌ No movies found matching '{search_query}'. Try a different search term.")
+                st.info("💡 Tip: Try searching with partial movie names (e.g., 'bat' for Batman movies)")
+        elif search_query and len(search_query.strip()) == 0:
+            st.info("👆 Start typing a movie name to search...")
+        
+        if selected_movie and selected_movie_data is not None:
             selected_movie_data = movies_df[movies_df['title'] == selected_movie].iloc[0]
             
             col1, col2, col3 = st.columns([1, 2, 2])

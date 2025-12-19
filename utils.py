@@ -117,3 +117,69 @@ def format_metrics_row(metrics_dict):
     for col, (label, value) in zip(cols, metrics_dict.items()):
         with col:
             st.metric(label, value)
+
+
+def search_movies_by_name(movies_df, search_query, max_results=20):
+    """
+    Search for movies by name with case-insensitive partial matching.
+    Supports both substring matching and word-based matching for better results.
+    
+    Args:
+        movies_df: DataFrame containing movie data with 'title' column
+        search_query: String to search for in movie titles
+        max_results: Maximum number of results to return
+    
+    Returns:
+        DataFrame with matching movies, sorted by relevance
+    """
+    if not search_query or len(search_query.strip()) == 0:
+        return pd.DataFrame()
+    
+    search_query = search_query.strip().lower()
+    search_words = search_query.split()
+    
+    # Ensure 'title' column exists
+    if 'title' not in movies_df.columns:
+        return pd.DataFrame()
+    
+    # Filter movies where title contains the search query (case-insensitive)
+    # Use contains with regex=False for better performance
+    title_lower = movies_df['title'].astype(str).str.lower()
+    mask = title_lower.str.contains(search_query, na=False, regex=False)
+    matches = movies_df[mask].copy()
+    
+    if len(matches) == 0:
+        return pd.DataFrame()
+    
+    # Calculate relevance scores using the filtered matches
+    matches_title_lower = matches['title'].astype(str).str.lower()
+    matches['is_exact_match'] = (matches_title_lower == search_query).astype(int)
+    matches['starts_with'] = matches_title_lower.str.startswith(search_query).astype(int)
+    
+    # Word-based matching: count how many search words appear in the title
+    def count_matching_words(title):
+        title_lower_str = str(title).lower()
+        return sum(1 for word in search_words if word in title_lower_str)
+    
+    matches['word_matches'] = matches['title'].apply(count_matching_words)
+    matches['word_match_ratio'] = matches['word_matches'] / len(search_words)
+    
+    # Calculate final relevance score
+    matches['relevance_score'] = (
+        matches['is_exact_match'] * 100 +
+        matches['starts_with'] * 50 +
+        matches['word_match_ratio'] * 30 +
+        (matches['title'].str.len() < 50).astype(int) * 5  # Prefer shorter titles (usually more relevant)
+    )
+    
+    # Sort by relevance score, then by title
+    matches = matches.sort_values(
+        by=['relevance_score', 'title'],
+        ascending=[False, True]
+    )
+    
+    # Drop temporary columns
+    matches = matches.drop(columns=['is_exact_match', 'starts_with', 'word_matches', 
+                                   'word_match_ratio', 'relevance_score'], errors='ignore')
+    
+    return matches.head(max_results)

@@ -31,9 +31,15 @@ class BaselineRecommender:
             how='left'
         )
     
-    def recommend(self, n=10, genres=None, year_range=None):
+    def recommend(self, n=10, genres=None, year_range=None, movie_name=None):
         """Get top-N recommendations based on weighted popularity"""
         filtered_df = self.movies_df[self.movies_df['weighted_score'].notna()].copy()
+        
+        # Filter by movie name if provided
+        if movie_name and len(movie_name.strip()) > 0:
+            search_query = movie_name.strip().lower()
+            title_mask = filtered_df['title'].astype(str).str.lower().str.contains(search_query, na=False, regex=False)
+            filtered_df = filtered_df[title_mask]
         
         if genres:
             genre_mask = filtered_df['genres'].apply(
@@ -46,6 +52,9 @@ class BaselineRecommender:
                 (filtered_df['release_year'] >= year_range[0]) &
                 (filtered_df['release_year'] <= year_range[1])
             ]
+        
+        if len(filtered_df) == 0:
+            return None
         
         recommendations = filtered_df.nlargest(n, 'weighted_score')
         return recommendations[['movieId', 'title', 'genres', 'release_year', 
@@ -178,15 +187,21 @@ class ContentBasedRecommender:
         
         return features
     
-    def recommend_popular(self, n=10, genres=None, year_range=None):
+    def recommend_popular(self, n=10, genres=None, year_range=None, movie_name=None):
         """Get top-N recommendations using ML predictions"""
         if self.model is None:
             baseline = BaselineRecommender(self.movies_df)
-            return baseline.recommend(n, genres, year_range)
+            return baseline.recommend(n, genres, year_range, movie_name)
         
         candidates = self.movie_features[
             self.movie_features['num_ratings'].notna()
         ].copy()
+        
+        # Filter by movie name if provided
+        if movie_name and len(movie_name.strip()) > 0:
+            search_query = movie_name.strip().lower()
+            title_mask = candidates['title'].astype(str).str.lower().str.contains(search_query, na=False, regex=False)
+            candidates = candidates[title_mask]
         
         if genres:
             genre_mask = candidates['genres'].apply(
