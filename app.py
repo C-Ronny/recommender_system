@@ -377,8 +377,7 @@ if st.session_state.initialized:
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #666; padding: 20px;">
-        <p>Built with Streamlit | Data from MovieLens | Posters from TMDB</p>
-        <p>Machine Learning Final Project</p>
+        <p>Built with Streamlit | Data from MovieLens | Posters from TMDB</p>        
     </div>
     """, unsafe_allow_html=True)
 
