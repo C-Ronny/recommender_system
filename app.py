@@ -125,11 +125,11 @@ if st.session_state.initialized:
                 unsafe_allow_html=True)
     
     with st.sidebar:
-        st.markdown('<div class="section-header">⚙️ Settings</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Settings</div>', unsafe_allow_html=True)
         
         recommendation_mode = st.radio(
             "Recommendation Mode",
-            ["🔥 Discover Movies", "🎯 Similar Movies"],
+            ["Discover Movies", "Similar Movies"],
             help="Choose how you want to find movies"
         )
         
@@ -137,7 +137,7 @@ if st.session_state.initialized:
         
         recommender_type = st.radio(
             "Algorithm",
-            ["🌟 Baseline (Popularity)", "🤖 Content-Based ML"],
+            ["Baseline (Popularity)", "Content-Based ML"],
             help="Baseline uses weighted ratings, ML uses Random Forest model"
         )
         
@@ -152,7 +152,7 @@ if st.session_state.initialized:
         )
         
         st.markdown("---")
-        st.markdown("### 📊 Dataset Info")
+        st.markdown("### Dataset Info")
         st.metric("Total Movies", f"{len(movies_df):,}")
         st.metric("Total Ratings", "33.8M")
         st.metric("Users", "331K")
@@ -193,7 +193,7 @@ if st.session_state.initialized:
                 help="Filter movies by release year"
             )
         
-        if st.button("🎬 Get Recommendations", key="discover_btn"):
+        if st.button("Get Recommendations", key="discover_btn"):
             with st.spinner("Finding perfect movies for you..."):
                 # Apply movie name filter if provided (pass to recommender)
                 movie_name_filter = movie_search_filter.strip() if movie_search_filter and len(movie_search_filter.strip()) > 0 else None
@@ -240,11 +240,11 @@ if st.session_state.initialized:
                     st.warning(error_msg)
     
     else:
-        st.markdown('<div class="section-header">🎯 Find Similar Movies</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-header">Find Similar Movies</div>', unsafe_allow_html=True)
         
         # Movie search input
         search_query = st.text_input(
-            "🔍 Search for a movie",
+            "Search for a movie 🔍",
             placeholder="Type movie name to search (e.g., 'batman', 'matrix', 'titanic')...",
             help="Start typing to search for movies by name",
             key="movie_search_input"
@@ -259,7 +259,7 @@ if st.session_state.initialized:
                 search_results = search_movies_by_name(movies_df, search_query, max_results=100)
             
             if len(search_results) > 0:
-                st.success(f"✅ Found {len(search_results)} movie(s) matching '{search_query}'")
+                st.success(f"Found {len(search_results)} movie(s) matching '{search_query}'")
                 
                 # Show a preview of search results
                 preview_limit = min(10, len(search_results))
@@ -300,7 +300,7 @@ if st.session_state.initialized:
                     selected_movie = selected_title
                     selected_movie_data = movies_df[movies_df['title'] == selected_title].iloc[0]
             else:
-                st.warning(f"❌ No movies found matching '{search_query}'. Try a different search term.")
+                st.warning(f"No movies found matching '{search_query}'. Try a different search term.")
                 st.info("💡 Tip: Try searching with partial movie names (e.g., 'bat' for Batman movies)")
         elif search_query and len(search_query.strip()) == 0:
             st.info("👆 Start typing a movie name to search...")
