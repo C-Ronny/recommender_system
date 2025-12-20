@@ -55,7 +55,7 @@ def main():
     # Check required files
     print("\n📊 Required Data Files:")
     required_files = [
-        data_dir / "Large_Movies.parquet",
+        data_dir / "large_movies.parquet",
         data_dir / "Movie_Features.parquet",
     ]
     
@@ -77,7 +77,7 @@ def main():
     print("\n🔍 Data Validation:")
     
     try:
-        movies = pd.read_parquet(data_dir / "Large_Movies.parquet")
+        movies = pd.read_parquet(data_dir / "large_movies.parquet")
         features = pd.read_parquet(data_dir / "Movie_Features.parquet")
         
         # Check columns
@@ -86,9 +86,9 @@ def main():
         
         missing_cols = [col for col in required_movie_cols if col not in movies.columns]
         if missing_cols:
-            print(f"⚠️  Large_Movies.parquet missing columns: {missing_cols}")
+            print(f"⚠️  large_movies.parquet missing columns: {missing_cols}")
         else:
-            print(f"✅ Large_Movies.parquet has required columns")
+            print(f"✅ large_movies.parquet has required columns")
         
         missing_cols = [col for col in required_feature_cols if col not in features.columns]
         if missing_cols:
@@ -117,7 +117,7 @@ def main():
         print("\nQuick Setup Guide:")
         print("1. Create data directory: mkdir -p data/models")
         print("2. Copy files to data/:")
-        print("   - Large_Movies.parquet")
+        print("   - large_movies.parquet")
         print("   - Movie_Features.parquet")
         print("   - large_links.parquet (for posters)")
         print("3. Copy model to data/models/:")

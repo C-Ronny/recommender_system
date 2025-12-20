@@ -81,7 +81,7 @@ def load_data_cached():
     """Load all required data files with caching"""
     data_path = Path("data")
     
-    movies_df = pd.read_parquet(data_path / "Large_Movies.parquet")
+    movies_df = pd.read_parquet(data_path / "large_movies.parquet")
     
     movie_features = pd.read_parquet(data_path / "Movie_Features.parquet")
     

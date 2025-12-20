@@ -113,7 +113,7 @@ Place the following files in the `data/` directory:
 
 ```
 data/
-├── Large_Movies.parquet      # Movie metadata (years, etc.)
+├── large_movies.parquet      # Movie metadata (years, etc.)
 ├── Movie_Features.parquet    # Engineered features for model
 ├── large_links.parquet       # IMDB ID mappings for posters
 └── models/
@@ -122,7 +122,7 @@ data/
 
 **File Descriptions:**
 
-- `Large_Movies.parquet`: Basic movie information (title, genres, release year)
+- `large_movies.parquet`: Basic movie information (title, genres, release year)
 - `Movie_Features.parquet`: Extended features including ratings, tags, and engineered features
 - `large_links.parquet`: Links to external databases (TMDB, IMDB) for fetching posters
 - `random_forest_optimized.pkl`: Pre-trained machine learning model (optional - app works without it using baseline mode)
@@ -156,7 +156,7 @@ recommender_system/
 ├── .streamlit/
 │   └── config.toml             # Streamlit theme configuration
 ├── data/                       # Data files directory
-│   ├── Large_Movies.parquet
+│   ├── large_movies.parquet
 │   ├── Movie_Features.parquet
 │   ├── large_links.parquet
 │   └── models/
