@@ -156,8 +156,8 @@ if st.session_state.initialized:
         st.metric("Total Ratings", "33.8M")
         st.metric("Users", "331K")
     
-    if "🔥 Discover" in recommendation_mode:
-        st.markdown('<div class="section-header">🔥 Discover New Movies</div>', unsafe_allow_html=True)
+    if "Discover Movies" in recommendation_mode:
+        st.markdown('<div class="section-header">Discover New Movies</div>', unsafe_allow_html=True)
         
         # Optional movie name search filter
         movie_search_filter = st.text_input(
@@ -376,7 +376,8 @@ if st.session_state.initialized:
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; color: #666; padding: 20px;">
-        <p>Built with Streamlit | Data from MovieLens | Posters from TMDB</p>        
+        <p>Built with Streamlit | Data from MovieLens | Posters from TMDB</p>
+        
     </div>
     """, unsafe_allow_html=True)
 
