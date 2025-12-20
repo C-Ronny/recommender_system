@@ -121,8 +121,7 @@ if st.session_state.initialized:
     
     st.markdown('<h1 style="color: #e50914; text-align: center; margin-bottom: 10px;">🎬 MovieLens Recommender</h1>', 
                 unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; color: #999; margin-bottom: 40px;">Powered by Machine Learning</p>', 
-                unsafe_allow_html=True)
+    
     
     with st.sidebar:
         st.markdown('<div class="section-header">Settings</div>', unsafe_allow_html=True)
